@@ -63,71 +63,26 @@ design <- model.matrix(~population*acclimation, data=table)
 gastroc$mean = rowMeans(gastroc) #rowMeans takes means of each row
 keep_gastroc = subset(gastroc, mean >= 10) #filter by means
 dim(keep_gastroc)
-keep_gastroc$mean = NULL #clean up dataset
+#clean up dataset
+keep_gastroc$mean = NULL 
 dim(keep_gastroc)
-y0 <- DGEList(counts=keep_gastroc, group=group) # make a DGE list
-y <- calcNormFactors(y0) # normalize
+# make a DGE list
+y0 <- DGEList(counts=keep_gastroc, group=group) 
+# normalize
+y <- calcNormFactors(y0) 
 plotMDS(y) #exploration plots
 y <- estimateGLMCommonDisp(y, design, verbose=TRUE)
 y <- estimateGLMTrendedDisp(y, design)
 y <- estimateGLMTagwiseDisp(y, design)
-gastroc.norm <- cpm(y0, log=TRUE, prior.count=1, normalized.lib.sizes=TRUE) #cpm normalized and log transformed expression dataset
+#cpm normalized and log transformed expression dataset
+gastroc.norm <- cpm(y0, log=TRUE, prior.count=1, normalized.lib.sizes=TRUE) 
 #write.csv(gastroc.norm, file="thermo_gastroc_norm_counts.csv")
 plotMDS(gastroc.norm)
 head(keep_gastroc)
-########## PCA separated by acclimation treatment
-pca <- prcomp(t(gastroc.norm), scale=FALSE)
-summary(pca)
-pc = as.data.frame(pca$x)
-pc$population <- population
-pc$acclimation <- acclimation
-pc$family <- gastroc.id$family
-ln <- subset(pc, population == "LN")
-lnN <- subset(ln, acclimation=="N")
-lnH <- subset(ln, acclimation=="H")
-lnC <- subset(ln, acclimation=="C")
-lnCH <- subset(ln, acclimation=="CH")
-me <- subset(pc, population == "ME")
-meN <- subset(me, acclimation=="N")
-meH <- subset(me, acclimation=="H")
-meC <- subset(me, acclimation=="C")
-meCH <- subset(me, acclimation=="CH")
-# pdf("Figures/pca_gastroc.pdf", h=8, w=8)
-par(mfrow=c(1,1),oma=c(4,4,1,1),mar=c(4,4,1,1))
-plot(lnN$PC1,lnN$PC1, type='n', pch=19, xlim=c(-50,30), ylim = c(-50,60), cex=2, yaxt='n', xaxt='n',ylab="", xlab="",col="black", lwd=2, bg=as.numeric(pc$population))
-axis(side=1, lwd=2, cex.axis=2, las=1)
-mtext("PC1 (12.5%)", side=1, line=4, cex=2)
-axis(side=2, lwd=2, cex.axis=2, las=1)
-mtext("PC2 (7.6%)", side=2, cex=2, line=4)
-ordiellipse(pca,pc$population,conf=0.95, draw="polygon", col="gray92", border = "white", lwd=3)
-points(lnN$PC1, lnN$PC2, pch=21, col="darkred", bg="darkred",cex=2.5, lwd=2)
-points(meN$PC1, meN$PC2, pch=21, col="darkred", bg="darkred", cex=2.5, lwd=2)
-points(lnH$PC1, lnH$PC2, pch=21, col="red", bg="red", cex=2.5, lwd=2)
-points(meH$PC1, meH$PC2, pch=21, col="red", bg="red", cex=2.5, lwd=2)
-points(lnC$PC1, lnC$PC2, pch=21, col="darkblue", bg="darkblue", cex=2.5, lwd=2)
-points(meC$PC1, meC$PC2, pch=21, col="darkblue", bg="darkblue", cex=2.5, lwd=2)
-points(lnCH$PC1, lnCH$PC2, pch=21, col="blue", bg="blue", cex=2.5, lwd=2)
-points(meCH$PC1, meCH$PC2, pch=21, col="blue", bg="blue", cex=2.5, lwd=3)
-# text(pc$PC1, pc$PC2, pc$family, cex=1, pos=2)
-box(which="plot", lty="solid", lwd=2)
-# dev.off()
 
-# population PCA
-# pdf("Figures/pop_pca_gastroc.pdf", h=8, w=8)
-par(mfrow=c(1,1),oma=c(3,4,1,1),mar=c(3,4,1,1), bg="white")
-plot(ln$PC1,ln$PC2, type='n', pch=19, xlim=c(-50,40), ylim = c(-40,30), cex=2, yaxt='n', xaxt='n',ylab="", xlab="",col="black", lwd=2, bg=as.numeric(pc$population))
-axis(side=1, lwd=2, cex.axis=2, las=1)
-mtext("PC1 (12.8%)", side=1, line=4, cex=2)
-axis(side=2, lwd=2, cex.axis=2, las=1)
-mtext("PC2 (6.8%)", side=2, cex=2, line=4)
-ordiellipse(pca,pc$population,conf=0.95, draw="polygon", col="gray92", border = "white", lwd=5)
-points(ln$PC1, ln$PC2, pch=21, col="darkorange", bg="darkorange",cex=4, lwd=2)
-points(me$PC1, me$PC2, pch=21, col="darkblue", bg="darkblue", cex=4, lwd=2)
-box(which="plot", lty="solid", lwd=2)
-# dev.off()
 
-####################################################################################################################################################### GASTROC WGCNA #####################################################
 
+####################### GASTROC WGCNA ###########################
 
 #WGCNA for gastroc
 head(gastroc.norm)#normalized read counts for gastroc only
@@ -146,37 +101,50 @@ plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="",
      cex.axis = 1.5, cex.main = 2)
 
 ###Import Trait Data
-traitData0 <- read.csv("thermo_capacity_traits_all.csv")#all trait data
+#all trait data
+traitData0 <- read.csv("thermo_capacity_traits_all.csv")
 dev.off()
 #boxplot(vo2_mass~population*acclimation, data=traitData0)
 Samples <- rownames(Expr)
-traitData <- traitData0[traitData0$mouse_id %in% Samples,] #We do not have trait data for all samples
-remove <- subset(Samples, !(Samples %in% traitData$mouse_id))#list of samples for which there is no trait data associated
+#We do not have trait data for all samples
+traitData <- traitData0[traitData0$mouse_id %in% Samples,] 
+# list of samples for which there is no trait data associated
+remove <- subset(Samples, !(Samples %in% traitData$mouse_id))
 # re-plot vo2 data ###
-plot(traitData0$mass, traitData0$vo2, log="xy") #log=xy makes this a log-log plot
+# log=xy makes this a log-log plot
+plot(traitData0$mass, traitData0$vo2, log="xy") 
 ln <- subset(traitData0, population=="LN")
 me <- subset(traitData0, population=="ME")
 plot(ln$mass, ln$vo2, xlim=c(12,30), ylim=c(1,7), pch=21, bg="darkorange", cex=2, log="xy")
 points(me$mass, me$vo2, pch=21, bg="darkblue", cex=2)
+
 #
-mod <- nls(vo2~a*(mass^b), data=traitData0, start=list(a=1, b=1)) #fit a nonlinear regression for the mass metabolic rate relationship
+# fit a nonlinear regression for the mass metabolic rate relationship
+mod <- nls(vo2~a*(mass^b), data=traitData0, start=list(a=1, b=1)) 
 lines(sort(traitData0$mass), predict(mod, list(mass=sort(traitData0$mass))), lwd=3, col="black")
-##### make trait dataframe for WGCNA
-traitx <- traitData0[, c(1:10)] #omit all traits except mass and vo2
+
+##### make trait dataframe for WGCNA ########################################
+# omit all traits except mass and vo2
+traitx <- traitData0[, c(1:10)] 
 traitx <- na.omit(traitx)
-########Create a new Expr dataframe with missing samples removed
+
+########Create a new Expr dataframe with missing samples removed #############
 Expr1 = Expr[!row.names(Expr)%in%remove,]
-traitRows <- match(rownames(Expr1), traitData$mouse_id) # make sure IDs are in the same order as Expr dataset.
+# make sure IDs are in the same order as Expr dataset.
+traitRows <- match(rownames(Expr1), traitData$mouse_id) 
 Traits0 <- traitData[traitRows, -1]
 rownames(Traits0) <- traitData[traitRows, 1]
 Traits <- Traits0
 dim(Traits)
 traity <- traitx[traitx$mouse_id %in% rownames(Traits),]
 dim(traity)
-match(rownames(Traits), rownames(Expr1))# should be in order if datasets are matched
+# should be in order if datasets are matched
+match(rownames(Traits), rownames(Expr1))
 collectGarbage()
+
 #
-mod <- nls(vo2~a*(mass^b), data=traity, start=list(a=1, b=1)) #fit a nonlinear regression for the mass metabolic rate relationship
+#fit a nonlinear regression for the mass metabolic rate relationship
+mod <- nls(vo2~a*(mass^b), data=traity, start=list(a=1, b=1)) 
 traity$vo2.res <- resid(mod)
 voplot <- traity[, c("population", "acclim1", "vo2.res")]
 voplot <- voplot[, c(1, 2, 3)]
@@ -191,33 +159,7 @@ vo.sd <- melt(tapply(vo.melt$vo2.res, list(vo.melt$population, vo.melt$acclim1),
 vo.plot <- data.frame(vo.plot,vo.sd[,3])
 names(vo.plot)[4]='sem'
 head(vo.plot)
-#vo2 plot
-# pdf("Figures/vo2.pdf", h=8, w=8)
-lnCol <- "#DB9E06"
-meCol <- "#263D92"
-par(mfrow=c(1,1),oma=c(4,7,1,1),mar=c(1,0.5,1,0.5))
-x1=vo.plot[vo.plot$population=='LN','acclim1']
-y1=vo.plot[vo.plot$population=='LN','vo2.res']
-plot(x1,y1,type='p',pch=19,col=lnCol,lwd=5,ylim=c(-1,1.5),ylab=' ',xlab=' ',xaxt='n',xlim=c(-.5,3.5),yaxt='n', cex.main=1.5)
-errbar(x1,y1,y1+vo.plot[vo.plot$population=='LN','sem'],y1-vo.plot[vo.plot$population=='LN','sem'],add=T, errbar.col=lnCol, lwd=3)
-points(x1, y1, bg=lnCol, col="black", pch=21, cex=3, lwd=2.5)
-axis(2 ,cex.axis=2, las=2)
-axis(1,at=c(0,1,2,3), labels=c("N","H","C","CH"),cex.axis=2)
-x2=vo.plot[vo.plot$population=='ME','acclim1']
-y2=vo.plot[vo.plot$population=='ME','vo2.res']
-# lines(x2,y2, col=meCol, lwd=5)
-errbar(x2,y2,y2+vo.plot[vo.plot$population=='ME','sem'],y2-vo.plot[vo.plot$population=='ME','sem'],add=T, errbar.col=meCol, lwd=3)
-points(x2,y2,pch=21,cex=3, col='black', bg=meCol, lwd=2.5)
-box(which = "plot", lty = "solid", lwd=2)
-dev.off()
 
-## vo2 re-analysis
-anova(lmer(vo2~population*po2*temp + mass + (1|family), data=traitData0)) #three-way lmer
-#posthoc analysis one-way pop-effect
-N <- subset(traitData0, acclimation=="N"); anova(lmer(vo2~population +mass + (1|family), data=N))
-H <- subset(traitData0, acclimation=="H"); anova(lmer(vo2~population + mass + (1|family), data=H))
-C <- subset(traitData0, acclimation=="C"); anova(lmer(vo2~population + mass + (1|family), data=C))
-CH <- subset(traitData0, acclimation=="CH"); anova(lmer(vo2~population + mass + (1|family), data=CH))
 
 #Choose a set of soft-thresholding powers
 powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -238,11 +180,14 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 #dev.off()
-dim(Expr)
+
+
 # # construct gene network
 cor <- WGCNA::cor
+# sft = 7
 Net <- blockwiseModules(Expr, power = 7, maxBlockSize = dim(Expr)[2],TOMType = "signed", networkType = "signed", minModuleSize = 30,reassignThreshold = 0, mergeCutHeight = 0.25,numericLabels = TRUE, pamRespectsDendro = FALSE,saveTOMs = TRUE,saveTOMFileBase = "ExprTOM",verbose = 3)
 save(Net,file = "thermo_capacity_gastroc_Network.RData")
+
 #load gastroc network
 load(file = "thermo_capacity_gastroc_Network.RData")#load saved Network file
 table(Net$colors)
@@ -264,8 +209,8 @@ plotDendroAndColors(Net$dendrograms[[1]], mergedColors[Net$blockGenes[[1]]],
                     dendroLabels = FALSE, hang = 0.03,
                     addGuide = TRUE, guideHang = 0.05)
 
-#######################################################################################################################
-# Trait Module Associations
+
+############## Trait Module Associations ###################
 gastroc.traits <- Traits[, c(8:11)] # subset data to only vo2 and o2 sat
 names(gastroc.traits)
 # Define numbers of genes and samples
@@ -285,37 +230,13 @@ rownames(moduleTraitQvalue) <- colnames(MEs)
 moduleTrait <- moduleTraitQvalue[apply(moduleTraitQvalue, MARGIN = 1, function(x) any(x <= 0.05)), ]#table of modules with significant correlations after FDR correction
 write.csv(moduleTrait, file="Tables/gastroc_module_trait_cor_FDR.csv")
 
-### Module trait correlation plots ###############################
-MEs0 = moduleEigengenes(Expr1, moduleColors)$eigengenes
-MEs = orderMEs(MEs0) #the rownames of this dataset are equal to Expr
-METable0 <- MEs
-METable <- METable0[colnames(METable0) %in% "MEdarkgrey"]
-match(rownames(METable), rownames(Traits0))
-METable$vo2 <- Traits0$vo2
-METable$population <- Traits0$population
-METable$acclimation <- Traits0$acclimation
-METable1 <- melt.data.frame(METable, id.vars=c("population", "acclimation","vo2"))
-colnames(METable1) <- c("population", "acclimation", "vo2","module", "ME")
-module <- c("MEred")
-# pdf("Figures/gastroc_darkgrey_correlation.pdf", h=8, w=8)
-par(mfrow=c(1,1),oma=c(4,4,1,1),mar=c(4,4,1,1), bg="white")
-for (i in module){
-  x1=METable1[METable1$module==i & METable1$population=="LN", "ME"]
-  y1=METable1[METable1$module==i & METable1$population=="LN", "vo2"]
-  plot(x1,y1, pch=21, xlim=c(-0.5,0.4), ylim = c(1.5,5.5), cex=2,ylab="", xlab="",col="black", bg="darkorange",lwd=1, main=i)
-  x=METable1[METable1$module==i, "ME"]
-  y=METable1[METable1$module==i, "vo2"]
-  abline(lm(y~x))
-  points(x1,y1, col="black", bg="darkorange", cex=2, pch=21)
-  x2=METable1[METable1$module==i & METable1$population=="ME", "ME"]
-  y2=METable1[METable1$module==i & METable1$population=="ME", "vo2"]
-  points(x2,y2, col="black", bg="darkblue", cex=2, pch=21)
-}
-# dev.off()
+
 
 ### Module trait linar mixed effects models  ###############################
+
 MEs0 = moduleEigengenes(Expr1, moduleColors)$eigengenes
-MEs = orderMEs(MEs0) #the rownames of this dataset are equal to Expr
+#the rownames of this dataset are equal to Expr
+MEs = orderMEs(MEs0) 
 cor.table0 <- MEs
 match(rownames(cor.table0), rownames(Traits))
 cor.table0$population <- Traits$population
@@ -339,9 +260,9 @@ sig.cor <- subset(cor.out.table, p_vo2<0.05)
 cor.out.table
 #there are no LMER effects of module on vo2
 
-#############################################################################
-# Create the starting data frame
-#################################################################################
+
+########## Create the starting data frame ####################################
+
 
 # Define variable weight containing the weight column of datTrait
 vo2_mass = as.data.frame(gastroc.traits$vo2_mass)
@@ -376,8 +297,10 @@ dim(geneInfoGastroc)
 head(gastroc.id)
 match(rownames(Expr), gastroc.id$mouse_id)
 setSamples = rownames(Expr)
-MEs0<-moduleEigengenes(Expr, moduleColors)$eigengenes #redo for all samples
-MEs<-orderMEs(MEs0) #the rownames of this dataset are equal to Expr
+#redo for all samples
+MEs0<-moduleEigengenes(Expr, moduleColors)$eigengenes 
+#the rownames of this dataset are equal to Expr
+MEs<-orderMEs(MEs0) 
 ME<-MEs
 match(rownames(ME), gastroc.id$mouse_id)
 gas.table0 <- MEs
@@ -394,13 +317,13 @@ model <- dlply(gas.table, .(module), lmer, formula = ME~population*po2*temp + (1
 
 
 
-######### Linear Mixed Effects Model ################
+################# Linear Mixed Effects Model ##################################
 
 # output anova table from model results
 out <- lapply(model, anova) 
 out
 
-#create dataframe from output table
+# create dataframe from output table
 out.table <- round(data.frame(matrix(unlist(out), nrow=length(out), byrow=T))[, c(36:42)],3) 
 rownames(out.table) <- names(out)
 colnames(out.table) <- c("population", "po2", "temp", "pop:po2", "pop:temp", "po2:temp", "3-way")
@@ -409,10 +332,11 @@ qTable <- round(matrix(p.adjust(as.vector(as.matrix(out.table)), method='fdr'),n
 rownames(qTable) <- rownames(out.table)
 colnames(qTable) <- colnames(out.table)
 
-#table of modules with significance after FDR correction
+# table of modules with significance after FDR correction
 qTable.sig <- qTable[apply(qTable[, ], MARGIN = 1, function(x) any(x <= 0.05)), ]
 write.csv(qTable.sig, file="Tables/gastroc_lmer_sig_pvalues.csv")
-# f.out <- round(data.frame(matrix(unlist(out), nrow=length(out), byrow=T))[, c(29:35)],3) #table of F values
+# table of F values
+# f.out <- round(data.frame(matrix(unlist(out), nrow=length(out), byrow=T))[, c(29:35)],3) 
 
 # at least one pop effect
 qPop <- qTable[apply(qTable[, -c(2:3, 6)], MARGIN = 1, function(x) any(x <= 0.05)), ]; 
@@ -430,7 +354,7 @@ qTreat.only <- qTreat[!(rownames(qTreat) %in% inter), ]; dim(qTreat.only)
 # a list of the colors used for module ID
 modNames
 
-### TO DO ################
+############ TO DO ################
 # rewrite code using for loop
 #for (item in modNames)
 #  {
@@ -487,6 +411,334 @@ anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
 anova(lmer(ME~acclimation + (1|family:population), data = NC))
 anova(lmer(ME~acclimation + (1|family:population), data = NCH))
 
+
+
+
+
+modNames
+#################### MEpink ###############################################
+pink <- subset(gas.table, module=="MEpink")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = pink)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for PINK
+
+# posthoc all - PINK
+N <- subset(pink, acclimation == "N")
+H <- subset(pink, acclimation == "H")
+C <- subset(pink, acclimation == "C")
+CH <- subset(pink, acclimation == "CH")
+
+# posthoc Mt Evens - PINK
+me <- subset(pink, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - PINK
+ln <- subset(pink, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - PINK
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - PINK
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+modNames
+#################### MEsalmon ###############################################
+salmon <- subset(gas.table, module=="MEsalmon")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = salmon)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for SALMON
+
+# posthoc all - SALMON
+N <- subset(salmon, acclimation == "N")
+H <- subset(salmon, acclimation == "H")
+C <- subset(salmon, acclimation == "C")
+CH <- subset(salmon, acclimation == "CH")
+
+# posthoc Mt Evens - SALMON
+me <- subset(salmon, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - SALMON
+ln <- subset(salmon, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - SALMON
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - SALMON
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+### 
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+
+modNames
+#################### MEbrown ###############################################
+brown <- subset(gas.table, module=="MEbrown")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = brown)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for BROWN
+
+# posthoc all - BROWN
+N <- subset(brown, acclimation == "N")
+H <- subset(brown, acclimation == "H")
+C <- subset(brown, acclimation == "C")
+CH <- subset(brown, acclimation == "CH")
+
+# posthoc Mt Evens - BROWN
+me <- subset(brown, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - BROWN
+ln <- subset(brown, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - BROWN
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - BROWN
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+### 
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+
+modNames
+#################### MEmagenta ###############################################
+magenta <- subset(gas.table, module=="MEmagenta")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = magenta)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for MAGENTA
+
+# posthoc all - MAGENTA
+N <- subset(magenta, acclimation == "N")
+H <- subset(magenta, acclimation == "H")
+C <- subset(magenta, acclimation == "C")
+CH <- subset(magenta, acclimation == "CH")
+
+# posthoc Mt Evens - MAGENTA
+me <- subset(magenta, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - MAGENTA
+ln <- subset(magenta, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - MAGENTA
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - MAGENTA
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+### 
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+modNames
+#################### MEgreen ###############################################
+green <- subset(gas.table, module=="MEgreen")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = green)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for GREEN
+
+# posthoc all - GREEN
+N <- subset(green, acclimation == "N")
+H <- subset(green, acclimation == "H")
+C <- subset(green, acclimation == "C")
+CH <- subset(green, acclimation == "CH")
+
+# posthoc Mt Evens - GREEN
+me <- subset(green, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - GREEN
+ln <- subset(green, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - GREEN
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - GREEN
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+### 
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+modNames
+#################### MEblack ###############################################
+black <- subset(gas.table, module=="MEblack")
+# three-way lmer
+anova(lmer(ME~population*po2*temp + (1|family:population), data = black)) 
+# results: p = 0.005 pop*po2, p = 0.047 pop*temp
+
+# posthoc analysis one-way for BLACK
+
+# posthoc all - BLACK
+N <- subset(black, acclimation == "N")
+H <- subset(black, acclimation == "H")
+C <- subset(black, acclimation == "C")
+CH <- subset(black, acclimation == "CH")
+
+# posthoc Mt Evens - BLACK
+me <- subset(black, population == "ME")
+me.warm <- subset(me, temp=="warm")
+me.C <- subset(me, acclimation == "C")
+me.CH <- subset(me, acclimation == "CH")
+me.N <- subset(me, acclimation== "N")
+
+# posthoc Lincoln - BLACK
+ln <- subset(black, population == "LN")
+ln.warm <- subset(ln, temp=="warm")
+ln.C <- subset(ln, acclimation == "C")
+ln.CH <- subset(ln, acclimation == "CH")
+ln.N <- subset(ln, acclimation== "N")
+
+# Mt Events results - BLACK
+me.NC <- rbind(me.N, me.C); 
+me.NCH <- rbind(me.N, me.CH); 
+
+# Lincoln results - BLACK
+NC <- rbind(ln.N, ln.C); 
+NCH <- rbind(ln.N, ln.CH); 
+
+summary(lmer(ME~acclimation + (1|family), data=me))
+# acclimationH p = 0.009, acclimationN = 0.04
+
+### 
+anova(lmer(ME~population + (1|family:population), data=N))
+anova(lmer(ME~population + (1|family:population), data=H))
+anova(lmer(ME~population + (1|family:population), data=C))
+anova(lmer(ME~population + (1|family:population), data=CH))
+anova(lmer(ME~po2 + (1|family:population), data = me.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NC))
+anova(lmer(ME~acclimation + (1|family:population), data = me.NCH))
+anova(lmer(ME~po2 + (1|family:population), data = ln.warm))
+anova(lmer(ME~acclimation + (1|family:population), data = NC))
+anova(lmer(ME~acclimation + (1|family:population), data = NCH))
+
+
+
+
+
+###########################################################################
+###########################################################################
 
 ###################### MEbrown ##############################################
 brown <- subset(gas.table, module=="MEbrown")
